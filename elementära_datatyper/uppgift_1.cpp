@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <cstdio>
 
 struct Time {
         Time(int hour, int minute) : hour(hour), minute(minute) {}
@@ -42,12 +43,7 @@ int main()
                 googol *= 10;
         }
 
-        while (googol > 0) {
-                current_time.increment_time();
-                googol -= 1;
-        }
-
-        current_time.print_time();
+        std::printf("%zu\n", googol);
 
         return 0;
 }
