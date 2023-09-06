@@ -51,7 +51,10 @@ bool is_happy(int num)
 
         square_ints(digits);
         /* Ifall summan blir 'num' igen kommer talet inte vara happy */
-        while (ints_sum(digits) != 1 && ints_sum(digits) != num) {
+        for (int sum = ints_sum(digits);
+             sum != 1 && sum != num;
+             sum = ints_sum(digits))
+        {
                 square_ints(digits);
         }
 
