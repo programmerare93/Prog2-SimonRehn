@@ -1,3 +1,4 @@
+#include <string>
 #include <vector>
 #include <iostream>
 
@@ -8,6 +9,7 @@ struct Item {
         uint weight;
 };
 
+// NOTE: Kunde använt en std::tuple<Item, std::size_t> istället
 struct ItemWithIndex {
         Item item;
         std::size_t index;
@@ -23,11 +25,10 @@ private:
         uint m_capacity;
         std::vector<Item> m_items {};
 
-        static void m_s_update_best_items(std::vector<ItemWithIndex>& best_items,
-                                          Item const& item, uint& capacity);
-
-        static bool m_s_item_weight_worth_it(Item const& orig_item,
-                                             Item const& new_item);
+        static void m_s_best_items_append(std::vector<ItemWithIndex>& best_items,
+                                          Item const& item,
+                                          std::size_t index,
+                                          uint& capacity);
 };
 
 Knapsack::Knapsack(uint capacity)
@@ -50,35 +51,51 @@ std::string Knapsack::choose_items() const
                 Item const& item = m_items[i];
                 if (item.weight <= current_cap) {
                         best_items.push_back({item, i});
+                        current_cap -= item.weight;
                 } else {
-                        Knapsack::m_s_update_best_items(best_items, item,
+                        Knapsack::m_s_best_items_append(best_items,
+                                                        item,
+                                                        i,
                                                         current_cap);
                 }
+        }
+
+        output += std::to_string(best_items.size()) + "\n";
+        for (auto item : best_items) {
+                output += std::to_string(item.index) + " ";
         }
 
         return output;
 }
 
-void Knapsack::m_s_update_best_items(std::vector<ItemWithIndex>& best_items,
-                                     Item const& item, uint& capacity)
+void Knapsack::m_s_best_items_append(std::vector<ItemWithIndex>& best_items,
+                                     Item const& item,
+                                     std::size_t index,
+                                     uint& capacity)
 {
-        for (std::size_t i = 0; i < best_items.size(); ++i) {
-                Item const& best_item = best_items[i].item;
+        Item const& first_item = best_items[0].item;
 
-                if (item.value > best_item.value) {
-                        if (Knapsack::m_s_item_weight_worth_it(best_item,
-                                                               item))
-                        {}
-                } else if (item.value == best_item.value) {
-                } else {
+        Item const* worst_item = &first_item;
+        double worst_item_ratio = (double)first_item.value / first_item.weight;
+        std::size_t worst_index = 0;
+
+        for (std::size_t i = 0; i < best_items.size(); ++i) {
+                Item const& current_item = best_items[i].item;
+                double current_item_ratio = (double)current_item.value / current_item.weight;
+
+                if (current_item_ratio < worst_item_ratio) {
+                        worst_item_ratio = current_item_ratio;
+                        worst_index = i;
+                        worst_item = &current_item;
                 }
         }
-}
 
-bool Knapsack::m_s_item_weight_worth_it(Item const& orig_item,
-                                        Item const& new_item)
-{
-        return (new_item.weight <= orig_item.weight);
+        double item_ratio = (double)item.value / item.weight;
+        if (item_ratio > worst_item_ratio) {
+                capacity += worst_item->weight;
+                capacity -= item.weight;
+                best_items[worst_index] = {item, index};
+        }
 }
 
 int main()
