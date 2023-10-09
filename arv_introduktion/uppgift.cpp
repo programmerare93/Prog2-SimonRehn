@@ -5,8 +5,27 @@ class Djur {
 public:
         Djur(std::string namn) : namn(namn) {}
 
+        virtual void at() const;
+        void sov() const;
+
+        std::string const& get_namn() const
+        {
+                return namn;
+        }
+
+protected:
         std::string namn;
 };
+
+void Djur::at() const
+{
+        std::cout << namn << " äter" << std::endl;
+}
+
+void Djur::sov() const
+{
+        std::cout << namn << " sover" << std::endl;
+}
 
 class Fagel : public Djur {
 public:
@@ -25,8 +44,15 @@ public:
                 , maxdjup(maxdjup)
         {}
 
+        void simma() const;
+
         int maxdjup;
 };
+
+void Fisk::simma() const
+{
+        std::cout << namn << " simmar" << std::endl;
+}
 
 class Haj : public Fisk {
 public:
@@ -35,8 +61,15 @@ public:
                 , antal_tänder(antal_tänder)
         {}
 
+        void at(Djur djur) const;
+
         int antal_tänder;
 };
+
+void Haj::at(Djur djur) const
+{
+        std::cout << namn << " äter en " << djur.get_namn() << std::endl;
+}
 
 class Torsk : public Fisk {
 public:
@@ -57,7 +90,11 @@ int main()
 {
         Haj vithaj("Vithaj", 300, 300);
         Torsk torsk("Torsk", 100, 10);
-        std::cout << fånga(vithaj, torsk); // Skriver ut 1
+
+        std::cout << fånga(vithaj, torsk) << std::endl; // Skriver ut 1
+        if (fånga(vithaj, torsk)) {
+                vithaj.at(torsk);
+        }
 
         return 0;
 }
