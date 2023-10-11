@@ -100,13 +100,9 @@ void Knapsack::m_s_best_items_append(std::vector<ItemWithIndex>& best_items,
 
 int main()
 {
-        uint test_cases;
-        std::cin >> test_cases;
-        for (; test_cases > 0; --test_cases) {
-                uint C, n;
+        uint C, n;
+        while (std::cin >> C >> n) {
                 uint value, weight;
-
-                std::cin >> C >> n;
 
                 Knapsack knapsack(C);
                 for (; n > 0; --n) {
