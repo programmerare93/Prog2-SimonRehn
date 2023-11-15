@@ -1,121 +1,83 @@
-# TODO: Kolla om s är garanterad
-
-
-from dataclasses import dataclass
-
 from math import inf
+from dataclasses import dataclass
 
 
 @dataclass
-
 class Tile:
     char: str
-    row_index: int
-    column_index: int
-    already_counted: bool
+    row: int
+    column: int
 
 
 def is_land_mass(tile: Tile) -> bool:
-
     return tile.char == '#' or tile.char == 'S'
 
 
+def is_same_tile(tile_a: Tile, tile_b: Tile) -> bool:
+    return tile_a.row == tile_b.row and tile_a.column == tile_b.column
+
+
+def list_contains_tile(tile: Tile, tiles: [Tile]):
+    for t in tiles:
+        if t is None:
+            continue
+        if is_same_tile(tile, t):
+            return True
+    return False
+
+
 def row_contains_stockholm(row: [str]) -> (bool, int):
-
     for i, c in enumerate(row):
-
         if c == 'S':
-
             return True, i
 
     return False, inf
 
 
-def get_tile(tile_i, tile_j, tiles: [str]) -> Tile:
+def get_tile(row: int, column: int, tiles: [str]) -> Tile:
     try:
-        return Tile(tiles[tile_i][tile_j], tile_i, tile_j, False)
+        return Tile(tiles[row][column], row, column)
     except IndexError:
         return None
 
 
-def get_adjacent_tiles(tile_i: int, tile_j: int, tiles: [str]) -> [Tile, Tile, Tile, Tile]:
-    north_tile = get_tile(tile_i + 1, tile_j, tiles)
-    south_tile = get_tile(tile_i - 1, tile_j, tiles)
-    west_tile = get_tile(tile_i, tile_j - 1, tiles)
-    east_tile = get_tile(tile_i, tile_j + 1, tiles)
+def get_adjacent_tiles(row: int, column: int, tiles: [str]) -> [Tile, Tile, Tile, Tile]:
+    north_tile = get_tile(row + 1, column, tiles)
+    south_tile = get_tile(row - 1, column, tiles)
+    if row - 1 < 0:
+        south_tile = None
+    west_tile = get_tile(row, column - 1, tiles)
+    if column - 1 < 0:
+        west_tile = None
+    east_tile = get_tile(row, column + 1, tiles)
 
     return [north_tile, south_tile, west_tile, east_tile]
 
 
-def count_land_tiles(tiles: [Tile]) -> int:
-    land_count = 0
-    for tile in tiles:
-        if is_land_mass(tile) and not tile.already_counted:
-            land_count += 1
-            tile.already_counted = True
-            #count_land_tiles(get_adjacent_tiles(tile.row_index, tile.column_index, land_mass),
-            #                 land_mass)
+def count_landmass(stockholm_tile: Tile, tiles: [str]) -> int:
+    land_count = 1 # Innehåller redan stockholm
+    counted_tiles: [Tile] = [stockholm_tile]
+    adjacent_tiles = get_adjacent_tiles(stockholm_tile.row,
+                                        stockholm_tile.column,
+                                        tiles)
 
-    return land_count
+    for tile in adjacent_tiles:
+        if tile is None:
+            continue
+        if not is_land_mass(tile):
+            continue
+        if list_contains_tile(tile, counted_tiles):
+            continue
 
+        land_count += 1
+        counted_tiles.append(tile)
+        current_adjacent = get_adjacent_tiles(tile.row, tile.column, tiles)
+        for t in current_adjacent:
+            if t is None:
+                continue
+            if not list_contains_tile(t, adjacent_tiles):
+                adjacent_tiles.append(t)
 
-def tiles_contain_uncounted_land(tiles: [Tile]) -> bool:
-    for tile in tiles:
-        if is_land_mass(tile) and not tile.already_counted:
-            return True
-    return False
-
-
-def land_mass_available(tiles: [Tile], land_mass: [str]) -> bool:
-    for tile in tiles:
-        if tiles_contain_uncounted_land(get_adjacent_tiles(tile.row_index, tile.column_index, land_mass)):
-            return True
-    return False
-
-def tile_is_connected(tile_index: int, row: [str]) -> bool:
-    try:
-        if not is_land_mass(row[tile_index - 1]):
-            return False
-    except IndexError:
-        pass
-
-    try:
-        if not is_land_mass(row[tile_index + 1]):
-            return False
-    except IndexError:
-        pass
-
-    return True
-
-def count_landmass(land_mass: [str], stockholm_tile: Tile) -> int:
-    land_count = 1 # Innehåller redan 'S'
-    current_tile = stockholm_tile
-    current_row = stockholm_tile.row_index
-
-    while True:
-        row = land_mass[current_row]
-        for i, tile in enumerate(row):
-            if tile == '#' and tile_is_connected(i, row):
-                land_count += 1
-
-    tiles = get_adjacent_tiles(current_tile.row_index,
-                               current_tile.column_index,
-                               land_mass)
-
-    while True:
-        land_count += count_land_tiles(tiles)
-        if not land_mass_available(tiles, land_mass):
-            break
-
-        for tile in tiles:
-            land_count += count_land_tiles(get_adjacent_tiles(tile.row_index, tile.column_index, land_mass))
-
-    """
-    for i, tile in enumerate(tiles):
-        if is_landmass(tile):
-            land_count += 1
-        new_tiles = get_adjacent_tiles(tile.row_index, tile.column_index, land_mass)
-    """
     return land_count
 
 
@@ -124,23 +86,23 @@ def main():
     columns = int(input())
     changes_count = int(input())
 
-    land_mass = []
-    stockholm = Tile('S', inf, inf, True)
-
-    land_count = 0
-    stockholm_found = False
-    for i in range(rows):
-        land_mass.append(input())
-        contains_stockholm, column_index = row_contains_stockholm(land_mass[i])
+    tiles = []
+    stockholm = Tile('S', inf, inf)
+    for row in range(rows):
+        tiles.append(input())
+        contains_stockholm, column = row_contains_stockholm(tiles[row])
         if contains_stockholm:
-            stockholm.row_index = i
-            stockholm.column_index = column_index
+            stockholm.row = row
+            stockholm.column = column
 
-    print(count_landmass(land_mass, stockholm))
+    print(count_landmass(stockholm, tiles))
 
-    #for _ in range(changes_count):
-    #    i, j = tuple(input().split(" "))
-
+    for _ in range(changes_count):
+        row, column = tuple(input().split(" "))
+        row = int(row)
+        column = int(column)
+        tiles[row - 1] = tiles[row - 1][: column - 1] + '#' +  tiles[row - 1][column:]
+        print(count_landmass(stockholm, tiles))
 
 if __name__ == "__main__":
     main()
