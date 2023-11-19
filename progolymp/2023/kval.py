@@ -58,7 +58,7 @@ def get_adjacent_tiles(row: int, column: int, tiles: [str]) -> [Tile, Tile, Tile
 
 def count_landmass(stockholm_tile: Tile, tiles: [str]):
     land_count = 1 # Innehåller redan stockholm
-    counted_tiles: dict(str, bool) = {
+    counted_tiles = {
         str(stockholm_tile) : True
     }
 
